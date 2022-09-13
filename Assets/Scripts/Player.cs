@@ -4,7 +4,7 @@ using UnityEngine;
 public class Player : NetworkBehaviour {
 
     public NetworkVariable<Vector3> Position = new NetworkVariable<Vector3>();
-    public NetworkVariable<Color> PlayerColor = new NetworkVariable<Color>(Color.red);
+    public NetworkVariable<Color> PlayerColor = new NetworkVariable<Color>(Color.gray);
     private GameManager _gameMgr;
     public float movementSpeed = 1.0f;
 

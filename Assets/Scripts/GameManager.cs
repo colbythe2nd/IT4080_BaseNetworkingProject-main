@@ -50,11 +50,11 @@ public class GameManager : NetworkBehaviour {
 
     private Color[] playerColors = new Color[]
        {
+        Color.red,
         Color.blue,
         Color.green,
         Color.yellow,
-        Color.gray,
-        Color.cyan
+        Color.magenta
        };
 
     private int colorIndex = 0;
