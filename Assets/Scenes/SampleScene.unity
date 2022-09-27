@@ -292,7 +292,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8fceb1279aac848359b5fd05638a96a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  serverStartType: 1
+  serverStartType: 2
 --- !u!4 &782628377
 Transform:
   m_ObjectHideFlags: 0
@@ -521,6 +521,11 @@ MonoBehaviour:
     NetworkPrefabs:
     - Override: 0
       Prefab: {fileID: 4648089067237356899, guid: dfb370e133b5c4264bee626274c74348, type: 3}
+      SourcePrefabToOverride: {fileID: 0}
+      SourceHashToOverride: 0
+      OverridingTargetPrefab: {fileID: 0}
+    - Override: 0
+      Prefab: {fileID: 866180907710184054, guid: c0847efb94534f04bbbe9b248233845b, type: 3}
       SourcePrefabToOverride: {fileID: 0}
       SourceHashToOverride: 0
       OverridingTargetPrefab: {fileID: 0}

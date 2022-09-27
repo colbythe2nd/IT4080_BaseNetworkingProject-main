@@ -17,7 +17,7 @@ public class Player : NetworkBehaviour {
     {
         ApplyPlayerColor();
         PlayerColor.OnValueChanged += OnPlayerColorChanged;
-        _bulletSpawner = transform
+        _bulletSpawner = transform.Find("RArm").transform.Find("BulletSpawner").GetComponent<BulletSpawner>();
     }
 
 
@@ -54,8 +54,7 @@ public class Player : NetworkBehaviour {
         if (isShiftKeyDown)
         {
             x_move = Input.GetAxis("Horizontal");
-        }
-        else
+        } else
         {
             y_rot = Input.GetAxis("Horizontal");
         }
@@ -87,13 +86,13 @@ public class Player : NetworkBehaviour {
             RequestPositionForMovementServerRpc(results[0], results[1]);
             if (Input.GetButtonDown("Fire1"))
             {
-                _bulletSpawner.Fire();
+                _bulletSpawner.FireServerRpc();
             }
         }
         if(!IsOwner || IsHost)
         {
             transform.Translate(PositionChange.Value);
-            transform.Rotate(PositionChange.Value);
+            transform.Rotate(RotationChange.Value);
         }
     }
 }
