@@ -3,30 +3,40 @@ using UnityEngine;
 
 public class Player : NetworkBehaviour {
 
-    public NetworkVariable<Vector3> Position = new NetworkVariable<Vector3>();
+    public NetworkVariable<Vector3> PositionChange = new NetworkVariable<Vector3>();
+    public NetworkVariable<Vector3> RotationChange = new NetworkVariable<Vector3>();
     public NetworkVariable<Color> PlayerColor = new NetworkVariable<Color>(Color.gray);
+
     private GameManager _gameMgr;
-    public float movementSpeed = 1.0f;
-
-
-    public void ApplyPlayerColor()
-    {
-        GetComponent<MeshRenderer>().material.color = PlayerColor.Value;
-    }
-
-    public override void OnNetworkSpawn()
-    {
-        if (IsOwner)
-        {
-            _gameMgr = GameObject.Find("GameManager").GetComponent<GameManager>();
-            _gameMgr.RequestNewPlayerColorServerRpc();
-        }
-    }
+    private Camera _camera;
+    public float movementSpeed = 0.5f;
+    public float rotationSpeed = 1f;
+    private BulletSpawner _bulletSpawner;
 
     public void Start()
     {
         ApplyPlayerColor();
         PlayerColor.OnValueChanged += OnPlayerColorChanged;
+        _bulletSpawner = transform
+    }
+
+
+    public void ApplyPlayerColor()
+    {
+        GetComponent<MeshRenderer>().material.color = PlayerColor.Value;
+        transform.Find("LArm").GetComponent<MeshRenderer>().material.color = PlayerColor.Value;
+        transform.Find("RArm").GetComponent<MeshRenderer>().material.color = PlayerColor.Value;
+    }
+
+    public override void OnNetworkSpawn()
+    {
+        _camera = transform.Find("Camera").GetComponent<Camera>();
+        if (IsOwner)
+        {
+            _gameMgr = GameObject.Find("GameManager").GetComponent<GameManager>();
+            _gameMgr.RequestNewPlayerColorServerRpc();
+        }
+        _camera.enabled = IsOwner;
     }
 
     public void OnPlayerColorChanged(Color previous, Color current)
@@ -34,38 +44,56 @@ public class Player : NetworkBehaviour {
         ApplyPlayerColor();
     }
 
-    Vector3 CalcMovement()
+    private Vector3[] CalcMovement()
     {
-        Vector3 moveVect = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        bool isShiftKeyDown = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        float x_move = 0.0f;
+        float z_move = Input.GetAxis("Vertical");
+        float y_rot = 0.0f;
+
+        if (isShiftKeyDown)
+        {
+            x_move = Input.GetAxis("Horizontal");
+        }
+        else
+        {
+            y_rot = Input.GetAxis("Horizontal");
+        }
+
+        Vector3 moveVect = new Vector3(x_move, 0, z_move);
         moveVect *= movementSpeed;
-        return moveVect;
+
+        Vector3 rotVect = new Vector3(0, y_rot, 0);
+        rotVect *= rotationSpeed;
+
+        return new[] { moveVect, rotVect };
     }
 
     [ServerRpc]
-    void RequestPositionForMovementServerRpc(Vector3 movement)
+    void RequestPositionForMovementServerRpc(Vector3 posChange, Vector3 rotChange)
     {
-        Position.Value += movement;
+        if (!IsServer && !IsHost) return;
 
-        float planeSize = 5f;
-        Vector3 newPosition = Position.Value + movement;
-        newPosition.x = Mathf.Clamp(newPosition.x, planeSize * -1, planeSize);
-        newPosition.z = Mathf.Clamp(newPosition.z, planeSize * -1, planeSize);
-        Position.Value = newPosition;
+        PositionChange.Value = posChange;
+        RotationChange.Value = rotChange;
+
     }
 
     private void Update()
     {
         if(IsOwner)
         {
-            Vector3 move = CalcMovement();
-            if(move.magnitude > 0)
+            Vector3[] results = CalcMovement();
+            RequestPositionForMovementServerRpc(results[0], results[1]);
+            if (Input.GetButtonDown("Fire1"))
             {
-                RequestPositionForMovementServerRpc(move);
+                _bulletSpawner.Fire();
             }
         }
-        else
+        if(!IsOwner || IsHost)
         {
-            transform.position = Position.Value;
+            transform.Translate(PositionChange.Value);
+            transform.Rotate(PositionChange.Value);
         }
     }
 }
